@@ -1,0 +1,255 @@
+# AskData Local Configuration
+# This file contains operational settings and budgets
+
+# =============================================================================
+# QUERY BUDGETS AND LIMITS
+# =============================================================================
+
+# Table Selection Limits
+MAX_TABLES_PER_QUERY = 20
+MIN_TABLES_PER_QUERY = 1
+DEFAULT_K_TABLES = 10
+
+# Column Selection Limits
+MAX_COLUMNS_PER_TABLE = 15
+MIN_COLUMNS_PER_TABLE = 3
+ALWAYS_KEEP_COLUMNS = ["id", "pk", "fk", "date", "created_at", "updated_at"]
+
+# Sampling Configuration
+DEFAULT_SAMPLE_SIZE = 500
+MAX_SAMPLE_SIZE = 1000
+MIN_SAMPLE_SIZE = 100
+
+# Prompt and Token Limits
+MAX_PROMPT_TOKENS = 8000
+MAX_RESPONSE_TOKENS = 4000
+PROMPT_CAP_ENABLED = true
+
+# Result Limits
+MAX_RESULT_ROWS = 10000
+PREVIEW_ROW_LIMIT = 100
+STREAMING_ENABLED = true
+
+# =============================================================================
+# PERFORMANCE SETTINGS
+# =============================================================================
+
+# Timeouts
+QUERY_TIMEOUT_SECONDS = 300
+PROFILER_TIMEOUT_SECONDS = 60
+EMBEDDING_TIMEOUT_SECONDS = 30
+LLM_TIMEOUT_SECONDS = 60
+
+# Caching
+PROFILER_CACHE_TTL = 3600  # 1 hour
+EMBEDDING_CACHE_TTL = 86400  # 24 hours
+RESULT_CACHE_TTL = 1800  # 30 minutes
+SCHEMA_CACHE_TTL = 7200  # 2 hours
+
+# Batch Processing
+EMBEDDING_BATCH_SIZE = 32
+PROFILER_BATCH_SIZE = 10
+INDEXING_BATCH_SIZE = 100
+
+# =============================================================================
+# RETRY AND RESILIENCE
+# =============================================================================
+
+# Retry Configuration
+MAX_RETRIES = 3
+RETRY_BACKOFF_SECONDS = 1
+RETRY_MAX_BACKOFF_SECONDS = 60
+RETRY_JITTER = 0.1
+
+# Circuit Breaker
+CIRCUIT_BREAKER_FAILURE_THRESHOLD = 5
+CIRCUIT_BREAKER_RECOVERY_TIMEOUT = 60
+CIRCUIT_BREAKER_EXPECTED_FAILURE_RATE = 0.5
+
+# =============================================================================
+# SEARCH AND RANKING
+# =============================================================================
+
+# Vector Search
+VECTOR_SEARCH_TOP_K = 20
+VECTOR_SEARCH_THRESHOLD = 0.7
+HYBRID_SEARCH_ENABLED = true
+BM25_WEIGHT = 0.3
+VECTOR_WEIGHT = 0.7
+
+# Reranker Settings
+RERANKER_ENABLED = true
+RERANKER_TOP_K = 10
+RERANKER_THRESHOLD = 0.6
+RERANKER_MODEL = "ms-marco-MiniLM-L-12-v2"
+
+# Table Scoring Weights
+NAME_MATCH_WEIGHT = 0.3
+VECTOR_SIMILARITY_WEIGHT = 0.4
+REACHABILITY_WEIGHT = 0.2
+FRESHNESS_WEIGHT = 0.1
+
+# Column Scoring Weights
+COLUMN_NAME_WEIGHT = 0.25
+COLUMN_VECTOR_WEIGHT = 0.35
+COLUMN_TYPE_FIT_WEIGHT = 0.2
+COLUMN_FINGERPRINT_WEIGHT = 0.2
+
+# =============================================================================
+# SQL GENERATION
+# =============================================================================
+
+# Model Selection
+DEFAULT_LLM_PROVIDER = "openai"
+FALLBACK_LLM_PROVIDER = "anthropic"
+LOCAL_MODEL_FALLBACK = true
+
+# Prompt Engineering
+SYSTEM_PROMPT_TEMPLATE = "You are an expert SQL developer. Generate only valid SQL for the given database dialect."
+USER_PROMPT_TEMPLATE = "Generate SQL for: {question}\n\nSchema: {schema}\n\nDialect: {dialect}"
+
+# SQL Validation
+VALIDATE_SQL_BEFORE_EXECUTION = true
+ALLOW_MULTI_STATEMENT = false
+ALLOW_DML_OPERATIONS = false
+ALLOW_DDL_OPERATIONS = false
+
+# =============================================================================
+# PROFILING AND ANALYSIS
+# =============================================================================
+
+# Profiling Depth
+PROFILE_NULL_RATES = true
+PROFILE_DISTINCT_COUNTS = true
+PROFILE_VALUE_DISTRIBUTIONS = true
+PROFILE_DATE_RANGES = true
+PROFILE_NUMERIC_STATS = true
+
+# Fingerprinting
+GENERATE_COLUMN_FINGERPRINTS = true
+FINGERPRINT_SAMPLE_SIZE = 1000
+DETECT_CATEGORICAL_COLUMNS = true
+DETECT_NUMERIC_POSITIVITY = true
+
+# Join Analysis
+ANALYZE_JOIN_PATHS = true
+DETECT_FAN_OUT_JOINS = true
+MAX_JOIN_HOPS = 5
+JOIN_OPTIMIZATION_ENABLED = true
+
+# =============================================================================
+# FINE-TUNING CONFIGURATION
+# =============================================================================
+
+# LoRA Training
+LORA_R = 16
+LORA_ALPHA = 32
+LORA_DROPOUT = 0.1
+LORA_TARGET_MODULES = ["q_proj", "v_proj"]
+LORA_LEARNING_RATE = 1e-4
+LORA_NUM_EPOCHS = 3
+LORA_BATCH_SIZE = 4
+LORA_GRADIENT_ACCUMULATION_STEPS = 4
+
+# Dataset Generation
+MIN_DATASET_SIZE = 100
+MAX_DATASET_SIZE = 10000
+SYNTHETIC_QUESTION_RATIO = 0.8
+USER_FEEDBACK_RATIO = 0.2
+
+# Model Evaluation
+EVALUATION_METRICS = ["parse_rate", "execution_rate", "accuracy", "latency"]
+EVALUATION_SPLIT_RATIO = 0.2
+MIN_IMPROVEMENT_THRESHOLD = 0.05
+
+# =============================================================================
+# MONITORING AND OBSERVABILITY
+# =============================================================================
+
+# Logging
+LOG_LEVEL = "INFO"
+LOG_FORMAT = "json"
+LOG_SAMPLING_RATE = 1.0
+LOG_REDACTION_ENABLED = true
+
+# Metrics
+METRICS_ENABLED = true
+METRICS_PORT = 9090
+METRICS_PATH = "/metrics"
+METRICS_COLLECTION_INTERVAL = 15
+
+# Tracing
+TRACING_ENABLED = true
+TRACING_SAMPLE_RATE = 0.1
+TRACING_EXPORT_PATH = "./logs/traces"
+TRACING_MAX_SPAN_DURATION = 300
+
+# Health Checks
+HEALTH_CHECK_INTERVAL = 30
+HEALTH_CHECK_TIMEOUT = 10
+HEALTH_CHECK_RETRIES = 3
+
+# =============================================================================
+# SECURITY SETTINGS
+# =============================================================================
+
+# Connection Isolation
+CONNECTION_ISOLATION_ENABLED = true
+SESSION_ISOLATION_ENABLED = true
+CROSS_CONNECTION_QUERIES_DISABLED = true
+
+# Handle Management
+HANDLE_TTL_SECONDS = 300
+HANDLE_RENEWAL_ENABLED = true
+MAX_HANDLES_PER_CONNECTION = 10
+
+# Rate Limiting
+RATE_LIMIT_ENABLED = true
+MAX_REQUESTS_PER_MINUTE = 100
+MAX_REQUESTS_PER_HOUR = 1000
+
+# =============================================================================
+# DEVELOPMENT AND TESTING
+# =============================================================================
+
+# Development Mode
+DEV_MODE = true
+HOT_RELOAD = true
+DEBUG_PYTHON = true
+MOCK_EXTERNAL_SERVICES = false
+
+# Testing
+TEST_MODE = false
+TEST_DATABASE_URL = "postgresql://test:test@localhost:5432/test_db"
+TEST_LLM_MOCK = true
+TEST_VECTOR_STORE_MOCK = true
+
+# Feature Flags
+FEATURE_FLAGS = {
+    "advanced_profiling": true,
+    "hybrid_search": true,
+    "fine_tuning": true,
+    "rlhf_loop": true,
+    "opensearch_integration": false,
+    "redis_caching": false
+}
+
+# Additional Settings for Enhanced Features
+MAX_ROWS_PREVIEW = 100
+CHROMA_VS_OPENSEARCH = "chroma"
+EMBEDDING_VERSION = "v1.0"
+RERANKER_TOGGLE = true
+
+# Forget Capabilities
+FORGET_SCOPE = [
+    "connection_config",
+    "database_adapter", 
+    "active_handles",
+    "vector_embeddings",
+    "table_profiles", 
+    "fine_tuned_models",
+    "query_history",
+    "feedback_data",
+    "cached_results",
+    "session_data"
+] 

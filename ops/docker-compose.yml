@@ -1,0 +1,426 @@
+version: '3.8'
+
+services:
+  # Main API Orchestrator
+  api-orchestrator:
+    build:
+      context: ../services/api-orchestrator
+      dockerfile: Dockerfile
+    container_name: askdata-orchestrator
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    depends_on:
+      - connection-registry
+      - introspect
+      - vector-store
+      - table-retriever
+      - micro-profiler
+      - chromadb
+      - sql-validator-service
+      - query-executor-service
+      - result-explainer-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Connection Registry
+  connection-registry:
+    build:
+      context: ../services/connection-registry
+      dockerfile: Dockerfile
+    container_name: askdata-connection-registry
+    ports:
+      - "8001:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Database Introspection Service
+  introspect:
+    build:
+      context: ../services/introspect-service
+      dockerfile: Dockerfile
+    container_name: askdata-introspect
+    ports:
+      - "8002:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Vector Store Service
+  vector-store:
+    build:
+      context: ../services/vector-store-service
+      dockerfile: Dockerfile
+    container_name: askdata-vector-store
+    ports:
+      - "8003:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+      - CHROMADB_HOST=http://chromadb:8000
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    depends_on:
+      - chromadb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Table Retrieval Service
+  table-retriever:
+    build:
+      context: ../services/table-retriever-service
+      dockerfile: Dockerfile
+    container_name: askdata-table-retriever
+    ports:
+      - "8004:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+      - VECTOR_STORE_URL=http://vector-store:8000
+      - INTROSPECT_URL=http://introspect:8000
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    depends_on:
+      - vector-store
+      - introspect
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Micro Profiling Service
+  micro-profiler:
+    build:
+      context: ../services/micro-profiler-service
+      dockerfile: Dockerfile
+    container_name: askdata-micro-profiler
+    ports:
+      - "8005:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+      - CONNECTION_REGISTRY_URL=http://connection-registry:8000
+      - INTROSPECT_URL=http://introspect:8000
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    depends_on:
+      - connection-registry
+      - introspect
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Column Pruning Service - TODO: Implement
+  # column-pruner:
+  #   build:
+  #     context: ../services/column-pruner
+  #     dockerfile: Dockerfile
+  #   container_name: askdata-column-pruner
+  #   ports:
+  #     - "8006:8000"
+  #   environment:
+  #     - ENVIRONMENT=local
+  #     - LOG_LEVEL=INFO
+  #   volumes:
+  #     - ../logs:/app/logs
+  #     - ../data:/app/data
+  #   networks:
+  #     - askdata-network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # Join Graph Service - TODO: Implement
+  # join-graph:
+  #   build:
+  #     context: ../services/join-graph
+  #     dockerfile: Dockerfile
+  #   container_name: askdata-join-graph
+  #   ports:
+  #     - "8007:8000"
+  #   environment:
+  #     - ENVIRONMENT=local
+  #     - LOG_LEVEL=INFO
+  #   volumes:
+  #     - ../logs:/app/logs
+  #     - ../data:/app/data
+  #   networks:
+  #     - askdata-network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # Metric Resolution Service - TODO: Implement
+  # metric-resolver:
+  #   build:
+  #     context: ../services/metric-resolver
+  #     dockerfile: Dockerfile
+  #   container_name: askdata-metric-resolver
+  #   ports:
+  #     - "8008:8000"
+  #   environment:
+  #     - ENVIRONMENT=local
+  #     - LOG_LEVEL=INFO
+  #   volumes:
+  #     - ../logs:/app/logs
+  #     - ../data:/app/data
+  #   networks:
+  #     - askdata-network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # SQL Generation Service - TODO: Implement
+  # sql-generator:
+  #   build:
+  #     context: ../services/sql-generator
+  #     dockerfile: Dockerfile
+  #   container_name: askdata-sql-generator
+  #   ports:
+  #     - "8009:8000"
+  #   environment:
+  #     - ENVIRONMENT=local
+  #     - LOG_LEVEL=INFO
+  #   volumes:
+  #     - ../logs:/app/logs
+  #     - ../data:/app/data
+  #   networks:
+  #     - askdata-network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # SQL Validation Service
+  sql-validator-service:
+    build:
+      context: ../services/sql-validator-service
+      dockerfile: Dockerfile
+    container_name: askdata-sql-validator
+    ports:
+      - "8011:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    depends_on:
+      - sql-generator-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Query Execution Service
+  query-executor-service:
+    build:
+      context: ../services/query-executor-service
+      dockerfile: Dockerfile
+    container_name: askdata-query-executor
+    ports:
+      - "8012:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    depends_on:
+      - sql-validator-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Result Explanation Service
+  result-explainer-service:
+    build:
+      context: ../services/result-explainer-service
+      dockerfile: Dockerfile
+    container_name: askdata-result-explainer
+    ports:
+      - "8013:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    depends_on:
+      - query-executor-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  #   environment:
+  #     - ENVIRONMENT=local
+  #     - LOG_LEVEL=INFO
+  #   volumes:
+  #       - ../logs:/app/logs
+  #       - ../data:/app/data
+  #   networks:
+  #       - askdata-network
+  #   healthcheck:
+  #       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #       interval: 30s
+  #       timeout: 10s
+  #       retries: 3
+
+  # Vector Database (ChromaDB) - Internal only, no host port exposure
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: askdata-chromadb
+    # No host port exposure - internal service only
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"]
+    volumes:
+      - ../data/chroma:/chroma/chroma
+    networks:
+      - askdata-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: OpenSearch for hybrid search
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    container_name: askdata-opensearch
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - ../data/opensearch:/usr/share/opensearch/data
+    networks:
+      - askdata-network
+    profiles:
+      - opensearch
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: askdata-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../data/redis:/data
+    networks:
+      - askdata-network
+    profiles:
+      - cache
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React App - TODO: Implement
+  # frontend:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: Dockerfile
+  #   container_name: askdata-frontend
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - REACT_APP_API_URL=http://localhost:8000
+  #     - REACT_APP_ENVIRONMENT=local
+  #   volumes:
+  #     - ../logs:/app/logs
+  #   networks:
+  #     - askdata-network
+  #   depends_on:
+  #     - api-orchestrator
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+networks:
+  askdata-network:
+    driver: bridge
+    name: askdata-network
+
+volumes:
+  askdata-data:
+    driver: local
+  askdata-logs:
+    driver: local
+  askdata-exports:
+    driver: local 
