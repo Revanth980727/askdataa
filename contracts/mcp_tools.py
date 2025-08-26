@@ -49,6 +49,13 @@ class NodeStatus(str, Enum):
     FAILED = "failed"
     SKIPPED = "skipped"
 
+
+class FeedbackType(str, Enum):
+    """Feedback event types for RLHF"""
+    APPROVAL = "approval"
+    REJECTION = "rejection"
+    EDIT = "edit"
+
 class ErrorCode(str, Enum):
     """Standard error codes for MCP tools"""
     # Connection errors
@@ -601,6 +608,32 @@ class ExplainResultsOutput(BaseModel):
     confidence_score: float
     versioning: Versioning = Field(..., description="Version information for consistency")
 
+
+class CaptureFeedbackInput(RunEnvelope):
+    """Input for capturing user feedback"""
+    event_type: FeedbackType = Field(..., description="Feedback event type")
+    prompt: str = Field(..., description="Original prompt or query")
+    response: str = Field(..., description="Model response")
+    edited_response: Optional[str] = Field(None, description="User-edited response")
+    comment: Optional[str] = Field(None, description="Additional comments")
+
+
+class CaptureFeedbackOutput(BaseModel):
+    """Output for feedback capture"""
+    status: str = Field(..., description="Operation status")
+
+
+class PromoteAdapterInput(BaseModel):
+    """Input for training and promoting adapter from feedback"""
+    connection_id: str = Field(..., description="Connection identifier")
+    description: Optional[str] = Field(None, description="Description for the adapter")
+
+
+class PromoteAdapterOutput(BaseModel):
+    """Output for adapter promotion"""
+    adapter_model: str = Field(..., description="Registered adapter model identifier")
+    message: str = Field(..., description="Result message")
+
 # =============================================================================
 # TOOL REGISTRY
 # =============================================================================
@@ -848,4 +881,28 @@ MCP_TOOLS = {
             ErrorCode.INTERNAL_ERROR
         ]
     ),
-} 
+
+    # RLHF Feedback Capture
+    "capture_feedback": MCPTool(
+        name="capture_feedback",
+        description="Capture user feedback events for RLHF",
+        input_schema=CaptureFeedbackInput.model_json_schema(),
+        output_schema=CaptureFeedbackOutput.model_json_schema(),
+        error_codes=[
+            ErrorCode.INVALID_INPUT,
+            ErrorCode.INTERNAL_ERROR
+        ]
+    ),
+
+    # Adapter Promotion
+    "promote_adapter": MCPTool(
+        name="promote_adapter",
+        description="Train and promote adapters from feedback",
+        input_schema=PromoteAdapterInput.model_json_schema(),
+        output_schema=PromoteAdapterOutput.model_json_schema(),
+        error_codes=[
+            ErrorCode.INVALID_INPUT,
+            ErrorCode.INTERNAL_ERROR
+        ]
+    ),
+}

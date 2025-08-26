@@ -49,6 +49,7 @@ if not exist "services\sql-generator" mkdir "services\sql-generator"
 if not exist "services\sql-validator-service" mkdir "services\sql-validator-service"
 if not exist "services\query-executor-service" mkdir "services\query-executor-service"
 if not exist "services\result-explainer-service" mkdir "services\result-explainer-service"
+if not exist "services\rlhf-service" mkdir "services\rlhf-service"
 
 REM Create frontend directory
 if not exist "frontend" mkdir "frontend"
@@ -120,7 +121,7 @@ REM ============================================================================
 echo 🔍 Verifying setup...
 
 REM Check if all required directories exist
-set REQUIRED_DIRS=data\chroma data\opensearch data\redis data\datasets data\feedback data\models logs\traces exports services\api-orchestrator services\connection-registry services\introspect services\indexer services\table-retriever services\micro-profiler services\column-pruner services\join-graph services\metric-resolver services\sql-generator services\sql-validator services\query-executor services\result-explainer frontend contracts ops
+set REQUIRED_DIRS=data\chroma data\opensearch data\redis data\datasets data\feedback data\models logs\traces exports services\api-orchestrator services\connection-registry services\introspect services\indexer services\table-retriever services\micro-profiler services\column-pruner services\join-graph services\metric-resolver services\sql-generator services\sql-validator services\query-executor services\result-explainer services\rlhf-service frontend contracts ops
 
 for %%d in (%REQUIRED_DIRS%) do (
     if not exist "%%d" (
