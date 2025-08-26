@@ -353,6 +353,10 @@ class OrchestratorState(BaseModel):
     step_timings: Dict[str, float] = Field(default_factory=dict)
     budget_exceeded: bool = Field(False, description="Whether budget limits were exceeded")
     budget: Optional[Budget] = Field(None, description="Execution budget constraints")
+    model_info: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Model and adapter information for the active connection",
+    )
 
 class RunRegistry:
     """In-memory registry for tracking query runs"""
@@ -1121,16 +1125,14 @@ class AskDataWorkflow:
     @track_node_execution
     async def _generate_sql(self, state: OrchestratorState) -> OrchestratorState:
         """Generate SQL from the question and schema"""
-        
+
         try:
-            # Get adapter model for this connection
-            adapter_model = self.model_registry.get_adapter_for_connection(
-                state.active_connection_id
-            )
-            
+            # Get adapter model information for this connection
+            adapter_model = state.model_info.get("adapter_model")
+
             # Get dialect from the connection registry
             dialect_id = await self._get_connection_dialect(state)
-            
+
             input_data = GenerateSQLInput(
                 run_envelope=RunEnvelope(
                     run_id=state.run_id,
@@ -1144,6 +1146,7 @@ class AskDataWorkflow:
                 join_graph=state.node_results["join_graph"],
                 metric_bindings=state.node_results["metric_resolver"],
                 dialect_id=dialect_id,
+                adapter_model=adapter_model,
                 prompt_cap=self.settings.max_prompt_tokens
             ).model_dump()
             
@@ -1399,6 +1402,7 @@ async def execute_query(request: QueryRequest, background_tasks: BackgroundTasks
         active_connection_id=connection_id,
         question=request.question,
         budget=budget,
+        model_info=model_registry.get_model_info_for_connection(connection_id),
         metadata={
             "session_id": request.session_id,
             "user_id": request.user_id,

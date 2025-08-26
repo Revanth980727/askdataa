@@ -513,6 +513,10 @@ class GenerateSQLInput(BaseModel):
     join_graph: Dict[str, Any]
     metric_bindings: Dict[str, Any]
     dialect_id: str
+    adapter_model: Optional[str] = Field(
+        None,
+        description="Optional adapter model identifier to use for generation"
+    )
     prompt_cap: int = 8000
     schema_revision: Optional[str] = Field(None, description="Schema revision for consistency")
 
@@ -600,6 +604,89 @@ class ExplainResultsOutput(BaseModel):
     model_used: str
     confidence_score: float
     versioning: Versioning = Field(..., description="Version information for consistency")
+
+# =============================================================================
+# FINE-TUNING TOOLS
+# =============================================================================
+
+class GenerateSyntheticQuestionsInput(BaseModel):
+    """Input for synthetic question generation"""
+    run_envelope: RunEnvelope
+    connection_id: str
+    table_metadata: Dict[str, Any] = Field(default_factory=dict)
+    num_questions: int = Field(10, description="Number of questions to generate")
+
+
+class GenerateSyntheticQuestionsOutput(BaseModel):
+    """Output from synthetic question generation"""
+    connection_id: str
+    questions: List[str]
+    generation_time: float
+    model_used: str
+
+
+class CreateDatasetInput(BaseModel):
+    """Input for dataset creation"""
+    run_envelope: RunEnvelope
+    connection_id: str
+    dataset_name: str
+    questions: List[str]
+    answers: List[str] = []
+
+
+class CreateDatasetOutput(BaseModel):
+    """Output from dataset creation"""
+    connection_id: str
+    dataset_path: str
+    num_samples: int
+    created_at: datetime
+
+
+class ValidateDatasetInput(BaseModel):
+    """Input for dataset validation"""
+    run_envelope: RunEnvelope
+    connection_id: str
+    dataset_name: str
+
+
+class ValidateDatasetOutput(BaseModel):
+    """Output from dataset validation"""
+    connection_id: str
+    is_valid: bool
+    num_samples: int
+    errors: List[str] = []
+
+
+class TrainAdapterInput(BaseModel):
+    """Input for LoRA adapter training"""
+    run_envelope: RunEnvelope
+    connection_id: str
+    dataset_name: str
+    base_model: str
+    adapter_name: str
+
+
+class TrainAdapterOutput(BaseModel):
+    """Output from adapter training"""
+    connection_id: str
+    adapter_model: str
+    training_time: float
+    metrics: Dict[str, Any] = {}
+
+
+class EvaluateAdapterInput(BaseModel):
+    """Input for adapter evaluation"""
+    run_envelope: RunEnvelope
+    connection_id: str
+    dataset_name: str
+    adapter_model: str
+
+
+class EvaluateAdapterOutput(BaseModel):
+    """Output from adapter evaluation"""
+    connection_id: str
+    metrics: Dict[str, Any]
+    evaluation_time: float
 
 # =============================================================================
 # TOOL REGISTRY
@@ -848,4 +935,57 @@ MCP_TOOLS = {
             ErrorCode.INTERNAL_ERROR
         ]
     ),
-} 
+
+    # Fine-tuning
+    "generate_synthetic_questions": MCPTool(
+        name="generate_synthetic_questions",
+        description="Generate synthetic questions for a connection",
+        input_schema=GenerateSyntheticQuestionsInput.model_json_schema(),
+        output_schema=GenerateSyntheticQuestionsOutput.model_json_schema(),
+        error_codes=[
+            ErrorCode.INVALID_INPUT,
+            ErrorCode.INTERNAL_ERROR
+        ]
+    ),
+    "create_dataset": MCPTool(
+        name="create_dataset",
+        description="Create a training dataset from questions and answers",
+        input_schema=CreateDatasetInput.model_json_schema(),
+        output_schema=CreateDatasetOutput.model_json_schema(),
+        error_codes=[
+            ErrorCode.INVALID_INPUT,
+            ErrorCode.INTERNAL_ERROR
+        ]
+    ),
+    "validate_dataset": MCPTool(
+        name="validate_dataset",
+        description="Validate a training dataset for completeness",
+        input_schema=ValidateDatasetInput.model_json_schema(),
+        output_schema=ValidateDatasetOutput.model_json_schema(),
+        error_codes=[
+            ErrorCode.INVALID_INPUT,
+            ErrorCode.INTERNAL_ERROR
+        ]
+    ),
+    "train_adapter": MCPTool(
+        name="train_adapter",
+        description="Train a LoRA adapter using a dataset",
+        input_schema=TrainAdapterInput.model_json_schema(),
+        output_schema=TrainAdapterOutput.model_json_schema(),
+        error_codes=[
+            ErrorCode.INVALID_INPUT,
+            ErrorCode.INSUFFICIENT_RESOURCES,
+            ErrorCode.INTERNAL_ERROR
+        ]
+    ),
+    "evaluate_adapter": MCPTool(
+        name="evaluate_adapter",
+        description="Evaluate a trained adapter on a dataset",
+        input_schema=EvaluateAdapterInput.model_json_schema(),
+        output_schema=EvaluateAdapterOutput.model_json_schema(),
+        error_codes=[
+            ErrorCode.INVALID_INPUT,
+            ErrorCode.INTERNAL_ERROR
+        ]
+    ),
+}
