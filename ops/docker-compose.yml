@@ -315,6 +315,30 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # RLHF Service
+  rlhf-service:
+    build:
+      context: ../services/rlhf-service
+      dockerfile: Dockerfile
+    container_name: askdata-rlhf-service
+    ports:
+      - "8014:8000"
+    environment:
+      - ENVIRONMENT=local
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - askdata-network
+    depends_on:
+      - connection-registry
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
   #   environment:
   #     - ENVIRONMENT=local
   #     - LOG_LEVEL=INFO

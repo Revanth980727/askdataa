@@ -62,6 +62,7 @@ mkdir -p services/micro-profiler-service
 mkdir -p services/sql-validator-service
 mkdir -p services/query-executor-service
 mkdir -p services/result-explainer-service
+mkdir -p services/rlhf-service
 
 # Create frontend directory
 mkdir -p frontend
@@ -176,6 +177,7 @@ REQUIRED_DIRS=(
     "services/sql-validator"
     "services/query-executor"
     "services/result-explainer"
+    "services/rlhf-service"
     "frontend"
     "contracts"
     "ops"

@@ -63,6 +63,7 @@ REQUIRED_DIRS=(
     "exports"
     "services/api-orchestrator"
     "services/connection-registry"
+    "services/rlhf-service"
     "contracts"
     "ops"
 )
@@ -101,6 +102,9 @@ REQUIRED_FILES=(
     "services/micro-profiler-service/main.py"
     "services/micro-profiler-service/requirements.txt"
     "services/micro-profiler-service/Dockerfile"
+    "services/rlhf-service/main.py"
+    "services/rlhf-service/requirements.txt"
+    "services/rlhf-service/Dockerfile"
     "contracts/mcp_tools.py"
     "ops/docker-compose.yml"
     "ops/config.local"
@@ -159,7 +163,7 @@ fi
 
 if [ -n "$PYTHON_CMD" ]; then
     # Check main.py files
-    for service in api-orchestrator connection-registry; do
+    for service in api-orchestrator connection-registry rlhf-service; do
         if [ -f "services/$service/main.py" ]; then
             echo "Checking services/$service/main.py..."
             if ! $PYTHON_CMD -m py_compile "services/$service/main.py"; then
@@ -282,6 +286,13 @@ if docker-compose -f ops/docker-compose.yml ps | grep -q "Up"; then
         echo "✅ Result Explainer Service is healthy"
     else
         echo "⚠️  Result Explainer Service health check failed"
+    fi
+
+    # Check RLHF service health
+    if curl -s http://localhost:8014/health > /dev/null 2>&1; then
+        echo "✅ RLHF Service is healthy"
+    else
+        echo "⚠️  RLHF Service health check failed"
     fi
 else
     echo "ℹ️  Services are not running. Start them with 'docker-compose -f ops/docker-compose.yml up -d'"
